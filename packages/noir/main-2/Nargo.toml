@@ -1,5 +1,5 @@
 [package]
-name = "main"
+name = "main-2"
 type = "bin"
 authors = [""]
 compiler_version = ">=0.25.0"

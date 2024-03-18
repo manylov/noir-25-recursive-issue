@@ -1,25 +1,66 @@
-# Recursive proofs with Noir
+# issue with noir 0.25 recursive proof
 
-Recursive proofs mean you prove that another proof is correct. A bit of a proofinception but bear
-with me:
+i used noir-examples repo resursion example
 
-- You prove that `x != y`
-- You pick that proof and send it to another circuit (the "outer" proof)
-- You generate the outer proof and verify it
+i cloned packages/noir/main folder into main-2
 
-Why is this useful? In this example, it doesn't do much. But you could verify two proofs within a
-proof, which can be incredibly useful.
+i added #[recursive] artifact to the both main circuits
 
-You could also avoid verifying stuff on-chain for turn-based games, for example. Check out the
-[Noir Docs](https://noir-lang.org/docs/explainers/explainer-recursion) for a high-level explanation.
+i edited packages/noir/recursion circuit to add proof_2 as main function argument and to add second
+std::verify_proof block
 
-## Getting Started
+i edites packages/hardhat/test/index.test.ts to prepare test for this case
 
-1. Install dependencies by running `yarn`
-2. For on-chain verification, open another terminal, and run
-   `cd packages/hardhat && npx hardhat node`
-3. Run `yarn dev`
+## issue
 
-## Testing
+When i run yarn test, using modified function
 
-To run the [test file](./packages/hardhat/test/index.test.ts), try `yarn test`
+```rust
+fn main(
+    verification_key: [Field; 114],
+    proof: [Field; 93],
+    proof_2: [Field; 93],
+    public_inputs: [Field; 1],
+    key_hash: Field
+) {
+    std::verify_proof(
+        verification_key.as_slice(),
+        proof.as_slice(),
+        public_inputs.as_slice(),
+        key_hash
+    );
+
+    std::verify_proof(
+        verification_key.as_slice(),
+        proof_2.as_slice(),
+        public_inputs.as_slice(),
+        key_hash
+    );
+}
+```
+
+i got error:
+
+```
+1) It compiles noir program code, receiving circuit bytes and abi object.
+       Recursive flow
+         Proof generation
+           Should generate a final proof with a recursive input:
+     RuntimeError: unreachable
+      at wasm://wasm/01fd9442:wasm-function[17622]:0x78a386
+      at wasm://wasm/01fd9442:wasm-function[223]:0x31f23
+      at wasm://wasm/01fd9442:wasm-function[226]:0x320eb
+      at wasm://wasm/01fd9442:wasm-function[8450]:0x348d89
+      at wasm://wasm/01fd9442:wasm-function[8449]:0x348b72
+      at wasm://wasm/01fd9442:wasm-function[8453]:0x348f76
+      at wasm://wasm/01fd9442:wasm-function[8457]:0x34927d
+      at wasm://wasm/01fd9442:wasm-function[8384]:0x345895
+      at wasm://wasm/01fd9442:wasm-function[7659]:0x2905e3
+      at wasm://wasm/01fd9442:wasm-function[7761]:0x293211
+
+```
+
+## Additional info
+
+If i remove first or second std::verify_proof (and it's proof/proof_2 function argument), tests are
+passed.
